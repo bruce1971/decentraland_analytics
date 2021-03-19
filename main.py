@@ -3,6 +3,7 @@ import time
 import sys
 import pymysql
 import datetime
+gap = 2
 
 
 def connect_to_db():
@@ -64,6 +65,8 @@ def import_sales(conn, querystring):
             "tx_id": event["transaction"]["transaction_hash"]
         }
         rows.append(row)
+        print("Imported:", event["transaction"]["transaction_hash"])
+        time.sleep(gap)
 
 
     print("Start inserting sales...")
@@ -125,7 +128,7 @@ def run():
     jump = 21600 #6hours
     current = 1616148193
     timeslots = []
-    for i in range(0, 10):
+    for i in range(0, 365*4):
         timeslots.append([current - jump*(i+1), current - jump*i])
 
     for timeslot in timeslots:
@@ -138,7 +141,7 @@ def run():
             "event_type": "successful"
         }
         import_sales(conn, querystring)
-        time.sleep(61)
+        time.sleep(gap)
 
     conn.close()
 
