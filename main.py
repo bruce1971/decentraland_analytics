@@ -40,6 +40,7 @@ def import_sales(conn, querystring):
         land_type = [x for x in asset["traits"] if x["trait_type"] == "Type"][0]["value"]
         size = [x for x in asset["traits"] if x["trait_type"] == "Size"][0]["value"] if land_type == "Estate" else 1
         price_usd = price_mana * float(event["payment_token"]["usd_price"])
+        price_eth = price_mana * float(event["payment_token"]["eth_price"])
         distance_to_road_trait = [x for x in asset["traits"] if x["trait_type"] == "Distance to Road"]
         distance_to_road = distance_to_road_trait[0]["value"] if len(distance_to_road_trait) > 0 else None
         distance_to_district_trait = [x for x in asset["traits"] if x["trait_type"] == "Distance to District"]
@@ -49,11 +50,13 @@ def import_sales(conn, querystring):
 
         row = {
             "sale_timestamp": event["transaction"]["timestamp"],
-            "price_usd": round(price_usd),
             "size": size,
+            "price_usd": round(price_usd),
             "price_usd_parcel": round(price_usd/size),
-            "price_eth": round(price_mana * float(event["payment_token"]["eth_price"]), 2),
+            "price_eth": round(price_eth, 3),
+            "price_eth_parcel": round(price_eth/size, 3),
             "price_mana": round(price_mana),
+            "price_mana_parcel": round(price_mana/size),
             "land_type": land_type,
             "distance_to_road": distance_to_road,
             "distance_to_district": distance_to_district,
@@ -76,11 +79,13 @@ def import_sales(conn, querystring):
             sql = f"""
             INSERT INTO sales(
                 sale_timestamp,
-                price_usd,
                 size,
+                price_usd,
                 price_usd_parcel,
                 price_eth,
+                price_eth_parcel,
                 price_mana,
+                price_mana_parcel,
                 land_type,
                 distance_to_road,
                 distance_to_district,
@@ -93,11 +98,13 @@ def import_sales(conn, querystring):
                 updated_timestamp
             ) VALUES (
                 "{row["sale_timestamp"]}",
-                "{row["price_usd"]}",
                 "{row["size"]}",
+                "{row["price_usd"]}",
                 "{row["price_usd_parcel"]}",
                 "{row["price_eth"]}",
+                "{row["price_eth_parcel"]}",
                 "{row["price_mana"]}",
+                "{row["price_mana_parcel"]}",
                 "{row["land_type"]}",
                 {row['distance_to_road'] if row['distance_to_road'] is not None else 'NULL'},
                 {row['distance_to_district'] if row['distance_to_district'] is not None else 'NULL'},
@@ -111,9 +118,13 @@ def import_sales(conn, querystring):
             )
             ON DUPLICATE KEY UPDATE
                 sale_timestamp = "{row["sale_timestamp"]}",
-                price_usd = "{row["price_usd"]}",
                 size = "{row["size"]}",
+                price_usd = "{row["price_usd"]}",
                 price_usd_parcel = "{row["price_usd_parcel"]}",
+                price_eth = "{row["price_eth"]}",
+                price_eth_parcel = "{row["price_eth_parcel"]}",
+                price_mana = "{row["price_mana"]}",
+                price_mana_parcel = "{row["price_mana_parcel"]}",
                 updated_timestamp = "{now_timestamp}"
             """
             cur.execute(sql)
