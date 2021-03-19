@@ -3,7 +3,7 @@ import time
 import sys
 import pymysql
 import datetime
-gap = 1
+gap = 2
 
 
 def connect_to_db():
@@ -141,7 +141,8 @@ def import_sales(conn, querystring):
 def run():
     conn = connect_to_db()
     jump = 21600 #6hours
-    current = 1616148193
+    # current = 1616148193 init
+    current = 1608609793
     timeslots = []
     for i in range(0, 365*4):
         timeslots.append([current - jump*(i+1), current - jump*i])
