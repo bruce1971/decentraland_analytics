@@ -1,4 +1,4 @@
--- Average sale price evolution
+-- Average sale price evolution daily
 SELECT
   			DATE(sale_timestamp) AS date,
   			COUNT(1) AS sales,
@@ -7,4 +7,4 @@ SELECT
   			ROUND(AVG(price_mana_parcel)) AS avg_price_mana_parcel
 FROM 		sales
 GROUP BY 	1
-ORDER BY  	1 desc
+ORDER BY  	1 asc

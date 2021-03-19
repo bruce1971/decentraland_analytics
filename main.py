@@ -3,7 +3,7 @@ import time
 import sys
 import pymysql
 import datetime
-gap = 2
+gap = 1
 
 
 def connect_to_db():
@@ -28,6 +28,8 @@ def import_sales(conn, querystring):
 
     rows = []
     for event in events["asset_events"]:
+        if event["asset"] is None:
+            continue
         asset_url = "https://api.opensea.io/api/v1/assets"
         querystring2 = {
             "token_ids": event["asset"]["token_id"],
@@ -39,6 +41,8 @@ def import_sales(conn, querystring):
         price_mana = int(event["total_price"])/1000000000000000000
         land_type = [x for x in asset["traits"] if x["trait_type"] == "Type"][0]["value"]
         size = [x for x in asset["traits"] if x["trait_type"] == "Size"][0]["value"] if land_type == "Estate" else 1
+        if size == 0:
+            continue
         price_usd = price_mana * float(event["payment_token"]["usd_price"])
         price_eth = price_mana * float(event["payment_token"]["eth_price"])
         distance_to_road_trait = [x for x in asset["traits"] if x["trait_type"] == "Distance to Road"]
@@ -143,6 +147,7 @@ def run():
         timeslots.append([current - jump*(i+1), current - jump*i])
 
     for timeslot in timeslots:
+        print('Timeslot: ', timeslot)
         querystring = {
             "only_opensea": "false",
             "offset":"0",
