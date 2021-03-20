@@ -3,8 +3,9 @@ import time
 import sys
 import pymysql
 import datetime
+from mana_eth import mana_eth
+from mana_usd import mana_usd
 gap = 2
-
 
 def connect_to_db():
     host = "ftt-db-dev.cvivbsbheldp.eu-west-1.rds.amazonaws.com"
@@ -20,11 +21,20 @@ def connect_to_db():
         sys.exit()
         return
 
+def formatter(dict, type):
+    formatted_dict = {}
+    for quote in dict["data"]["quotes"]:
+        formatted_dict[quote["time_close"][:10]] = quote["quote"][type]["close"]
+    return formatted_dict
+
 def import_sales(conn, querystring):
 
     print('Start api requests...')
     url = "https://api.opensea.io/api/v1/events"
     events = requests.request("GET", url, params=querystring).json()
+
+    eth_dict = formatter(mana_eth, "ETH")
+    usd_dict = formatter(mana_usd, "USD")
 
     rows = []
     for event in events["asset_events"]:
@@ -43,8 +53,9 @@ def import_sales(conn, querystring):
         size = [x for x in asset["traits"] if x["trait_type"] == "Size"][0]["value"] if land_type == "Estate" else 1
         if size == 0:
             continue
-        price_usd = price_mana * float(event["payment_token"]["usd_price"])
-        price_eth = price_mana * float(event["payment_token"]["eth_price"])
+        sale_timestamp = event["transaction"]["timestamp"]
+        price_usd = price_mana * usd_dict[sale_timestamp[:10]]
+        price_eth = price_mana * eth_dict[sale_timestamp[:10]]
         distance_to_road_trait = [x for x in asset["traits"] if x["trait_type"] == "Distance to Road"]
         distance_to_road = distance_to_road_trait[0]["value"] if len(distance_to_road_trait) > 0 else None
         distance_to_district_trait = [x for x in asset["traits"] if x["trait_type"] == "Distance to District"]
@@ -53,7 +64,7 @@ def import_sales(conn, querystring):
         distance_to_plaza = distance_to_plaza_trait[0]["value"] if len(distance_to_plaza_trait) > 0 else None
 
         row = {
-            "sale_timestamp": event["transaction"]["timestamp"],
+            "sale_timestamp": sale_timestamp,
             "size": size,
             "price_usd": round(price_usd),
             "price_usd_parcel": round(price_usd/size),
@@ -74,7 +85,6 @@ def import_sales(conn, querystring):
         rows.append(row)
         print("Imported:", event["transaction"]["transaction_hash"])
         time.sleep(gap)
-
 
     print("Start inserting sales...")
     with conn.cursor() as cur:
@@ -137,12 +147,12 @@ def import_sales(conn, querystring):
     conn.commit()
     print("Successfully inserted sales => ", len(rows))
 
-
 def run():
     conn = connect_to_db()
     jump = 21600 #6hours
-    # current = 1616148193 init
-    current = 1608609793
+    # current = int(time.time()) #now
+    current = int(time.time()) - 4*jump #now
+    # current = 1608609793
     timeslots = []
     for i in range(0, 365*4):
         timeslots.append([current - jump*(i+1), current - jump*i])
@@ -161,6 +171,5 @@ def run():
         time.sleep(gap)
 
     conn.close()
-
 
 run()
