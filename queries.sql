@@ -9,7 +9,7 @@ SELECT
 FROM 		        sales
 WHERE           price_usd_parcel > 50
 GROUP BY 	      1
-ORDER BY  	    1 asc
+ORDER BY  	    1 DESC
 
 
 -- WEEKLY
@@ -23,7 +23,7 @@ SELECT
 FROM 		        sales
 WHERE           price_usd_parcel > 50
 GROUP BY 	      1
-ORDER BY  	    1 asc
+ORDER BY  	    1 DESC
 
 
 -- MONTHLY
@@ -37,4 +37,4 @@ SELECT
 FROM 		        sales
 WHERE           price_usd_parcel > 50
 GROUP BY 	      1
-ORDER BY  	    1 asc
+ORDER BY  	    1 DESC

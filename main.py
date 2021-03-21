@@ -3,9 +3,8 @@ import time
 import sys
 import pymysql
 import datetime
-from mana_eth import mana_eth
-from mana_usd import mana_usd
-gap = 2
+gap = 3
+
 
 def connect_to_db():
     host = "ftt-db-dev.cvivbsbheldp.eu-west-1.rds.amazonaws.com"
@@ -21,20 +20,28 @@ def connect_to_db():
         sys.exit()
         return
 
-def formatter(dict, type):
+
+def price_feed(type):
+    print('Fetching historical price feeds...')
+    url = 'https://web-api.coinmarketcap.com/v1/cryptocurrency/ohlcv/historical'
+    querystring = {
+        "id": "1966",
+        "convert": type,
+        "time_start": "1311100800",
+        "time_end": int(time.time())
+    }
+    data = requests.request("GET", url, params=querystring).json()
     formatted_dict = {}
-    for quote in dict["data"]["quotes"]:
+    for quote in data["data"]["quotes"]:
         formatted_dict[quote["time_close"][:10]] = quote["quote"][type]["close"]
     return formatted_dict
 
-def import_sales(conn, querystring):
+
+def import_sales(conn, querystring, eth_dict, usd_dict):
 
     print('Start api requests...')
     url = "https://api.opensea.io/api/v1/events"
     events = requests.request("GET", url, params=querystring).json()
-
-    eth_dict = formatter(mana_eth, "ETH")
-    usd_dict = formatter(mana_usd, "USD")
 
     rows = []
     for event in events["asset_events"]:
@@ -147,15 +154,19 @@ def import_sales(conn, querystring):
     conn.commit()
     print("Successfully inserted sales => ", len(rows))
 
+
 def run():
     conn = connect_to_db()
     jump = 21600 #6hours
-    # current = int(time.time()) #now
-    current = int(time.time()) - 4*jump #now
-    # current = 1608609793
+    current = int(time.time()) #now
+    current = int(time.time()) - 3*jump #now
+    # current = 1605000449
     timeslots = []
     for i in range(0, 365*4):
         timeslots.append([current - jump*(i+1), current - jump*i])
+
+    eth_dict = price_feed("ETH")
+    usd_dict = price_feed("USD")
 
     for timeslot in timeslots:
         print('Timeslot: ', timeslot)
@@ -167,9 +178,10 @@ def run():
             "occurred_after": timeslot[0],
             "event_type": "successful"
         }
-        import_sales(conn, querystring)
+        import_sales(conn, querystring, eth_dict, usd_dict)
         time.sleep(gap)
 
     conn.close()
+
 
 run()
