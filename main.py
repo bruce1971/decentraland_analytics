@@ -34,6 +34,9 @@ def price_feed(type):
     formatted_dict = {}
     for quote in data["data"]["quotes"]:
         formatted_dict[quote["time_close"][:10]] = quote["quote"][type]["close"]
+    last_quote = data["data"]["quotes"][-1]
+    current_date = str(datetime.datetime.strptime(last_quote["time_close"][:10], "%Y-%m-%d") + datetime.timedelta(days=1))[:10]
+    formatted_dict[current_date] = last_quote["quote"][type]["close"]
     return formatted_dict
 
 
@@ -158,9 +161,8 @@ def import_sales(conn, querystring, eth_dict, usd_dict):
 def run():
     conn = connect_to_db()
     jump = 21600 #6hours
-    current = int(time.time()) #now
-    current = int(time.time()) - 3*jump #now
-    # current = 1605000449
+    # current = int(time.time()) #now
+    current = 1603574849
     timeslots = []
     for i in range(0, 365*4):
         timeslots.append([current - jump*(i+1), current - jump*i])
