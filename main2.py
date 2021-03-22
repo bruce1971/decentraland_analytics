@@ -96,7 +96,6 @@ def import_events(conn, querystring, eth_dict, usd_dict):
             "seller_address": event["seller"]["address"],
             "buyer_address": event["winner_account"]["address"] if event["winner_account"] else None,
         }
-        print(row)
         rows.append(row)
         print("Imported:", event["id"])
         print("====================================================================")
@@ -155,7 +154,6 @@ def import_events(conn, querystring, eth_dict, usd_dict):
             ON DUPLICATE KEY UPDATE
                 updated_timestamp = "{now_timestamp}"
             """
-            print(sql)
             cur.execute(sql)
 
     # persist data
