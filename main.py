@@ -40,7 +40,7 @@ def price_feed(type):
     return formatted_dict
 
 
-def import_sales(conn, querystring, eth_dict, usd_dict):
+def import_events(conn, querystring, eth_dict, usd_dict):
 
     print('Start api requests...')
     url = "https://api.opensea.io/api/v1/events"
@@ -48,7 +48,7 @@ def import_sales(conn, querystring, eth_dict, usd_dict):
 
     rows = []
     for event in events["asset_events"]:
-        if event["asset"] is None:
+        if event["asset"] is None or event["event_type"] not in ['created', 'successful']:
             continue
         asset_url = "https://api.opensea.io/api/v1/assets"
         querystring2 = {
@@ -58,14 +58,15 @@ def import_sales(conn, querystring, eth_dict, usd_dict):
         assets = requests.request("GET", asset_url, params=querystring2).json()
         asset = assets["assets"][0]
 
-        price_mana = int(event["total_price"])/1000000000000000000
+
+        price_mana = int(event["starting_price"])/1e18 if event["event_type"] == "created" else int(event["total_price"])/1e18
         land_type = [x for x in asset["traits"] if x["trait_type"] == "Type"][0]["value"]
-        size = [x for x in asset["traits"] if x["trait_type"] == "Size"][0]["value"] if land_type == "Estate" else 1
-        if size == 0:
+        land_size = [x for x in asset["traits"] if x["trait_type"] == "Size"][0]["value"] if land_type == "Estate" else 1
+        if land_size == 0:
             continue
-        sale_timestamp = event["transaction"]["timestamp"]
-        price_usd = price_mana * usd_dict[sale_timestamp[:10]]
-        price_eth = price_mana * eth_dict[sale_timestamp[:10]]
+        event_timestamp = event["created_date"]
+        price_usd = price_mana * usd_dict[event_timestamp[:10]]
+        price_eth = price_mana * eth_dict[event_timestamp[:10]]
         distance_to_road_trait = [x for x in asset["traits"] if x["trait_type"] == "Distance to Road"]
         distance_to_road = distance_to_road_trait[0]["value"] if len(distance_to_road_trait) > 0 else None
         distance_to_district_trait = [x for x in asset["traits"] if x["trait_type"] == "Distance to District"]
@@ -74,36 +75,42 @@ def import_sales(conn, querystring, eth_dict, usd_dict):
         distance_to_plaza = distance_to_plaza_trait[0]["value"] if len(distance_to_plaza_trait) > 0 else None
 
         row = {
-            "sale_timestamp": sale_timestamp,
-            "size": size,
+            "event_id": event["id"],
+            "event_timestamp": event_timestamp,
+            "land_id": event["asset"]["token_id"],
+            "event_type": event["event_type"],
+            "land_size": land_size,
             "price_usd": round(price_usd),
-            "price_usd_parcel": round(price_usd/size),
+            "price_usd_parcel": round(price_usd/land_size),
             "price_eth": round(price_eth, 3),
-            "price_eth_parcel": round(price_eth/size, 3),
+            "price_eth_parcel": round(price_eth/land_size, 3),
             "price_mana": round(price_mana),
-            "price_mana_parcel": round(price_mana/size),
+            "price_mana_parcel": round(price_mana/land_size),
             "land_type": land_type,
             "distance_to_road": distance_to_road,
             "distance_to_district": distance_to_district,
             "distance_to_plaza": distance_to_plaza,
-            "dcl_url": event["asset"]["external_link"],
+            "platform": event["collection_slug"],
+            "external_url": event["asset"]["external_link"],
             "opensea_url": event["asset"]["permalink"],
             "seller_address": event["seller"]["address"],
-            "buyer_address": event["winner_account"]["address"],
-            "tx_id": event["transaction"]["transaction_hash"]
+            "buyer_address": event["winner_account"]["address"] if event["winner_account"] else None,
         }
         rows.append(row)
-        print("Imported:", event["transaction"]["transaction_hash"])
+        print("Imported:", event["id"])
         time.sleep(gap)
 
-    print("Start inserting sales...")
+    print("Start inserting events...")
     with conn.cursor() as cur:
         now_timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         for row in rows:
             sql = f"""
-            INSERT INTO sales(
-                sale_timestamp,
-                size,
+            INSERT INTO land_events(
+                event_id,
+                event_timestamp,
+                land_id,
+                event_type,
+                land_size,
                 price_usd,
                 price_usd_parcel,
                 price_eth,
@@ -114,15 +121,18 @@ def import_sales(conn, querystring, eth_dict, usd_dict):
                 distance_to_road,
                 distance_to_district,
                 distance_to_plaza,
-                dcl_url,
+                platform,
+                external_url,
                 opensea_url,
                 seller_address,
                 buyer_address,
-                tx_id,
                 updated_timestamp
             ) VALUES (
-                "{row["sale_timestamp"]}",
-                "{row["size"]}",
+                "{row["event_id"]}",
+                "{row["event_timestamp"]}",
+                "{row["land_id"]}",
+                "{row["event_type"]}",
+                "{row["land_size"]}",
                 "{row["price_usd"]}",
                 "{row["price_usd_parcel"]}",
                 "{row["price_eth"]}",
@@ -133,22 +143,14 @@ def import_sales(conn, querystring, eth_dict, usd_dict):
                 {row['distance_to_road'] if row['distance_to_road'] is not None else 'NULL'},
                 {row['distance_to_district'] if row['distance_to_district'] is not None else 'NULL'},
                 {row['distance_to_plaza'] if row['distance_to_plaza'] is not None else 'NULL'},
-                "{row["dcl_url"]}",
+                "{row["platform"]}",
+                "{row["external_url"]}",
                 "{row["opensea_url"]}",
                 "{row["seller_address"]}",
-                "{row["buyer_address"]}",
-                "{row["tx_id"]}",
+                {f"'{row['buyer_address']}'" if row['buyer_address'] is not None else 'NULL'},
                 "{now_timestamp}"
             )
             ON DUPLICATE KEY UPDATE
-                sale_timestamp = "{row["sale_timestamp"]}",
-                size = "{row["size"]}",
-                price_usd = "{row["price_usd"]}",
-                price_usd_parcel = "{row["price_usd_parcel"]}",
-                price_eth = "{row["price_eth"]}",
-                price_eth_parcel = "{row["price_eth_parcel"]}",
-                price_mana = "{row["price_mana"]}",
-                price_mana_parcel = "{row["price_mana_parcel"]}",
                 updated_timestamp = "{now_timestamp}"
             """
             cur.execute(sql)
@@ -162,7 +164,7 @@ def run():
     conn = connect_to_db()
     jump = 21600 #6hours
     current = int(time.time()) #now
-    # current = 1603574849
+    # current = 1606592354
     timeslots = []
     for i in range(0, 365*4):
         timeslots.append([current - jump*(i+1), current - jump*i])
@@ -171,16 +173,17 @@ def run():
     usd_dict = price_feed("USD")
 
     for timeslot in timeslots:
+        print('Datetime:', datetime.datetime.utcfromtimestamp(timeslot[1]).strftime('%Y-%m-%d %H:%M:%S'))
         print('Timeslot: ', timeslot)
         querystring = {
             "only_opensea": "false",
             "offset":"0",
             "collection_slug": "decentraland",
+            # "token_id": 33687954325172907882874086135745052934183,
             "occurred_before": timeslot[1],
-            "occurred_after": timeslot[0],
-            "event_type": "successful"
+            "occurred_after": timeslot[0]
         }
-        import_sales(conn, querystring, eth_dict, usd_dict)
+        import_events(conn, querystring, eth_dict, usd_dict)
         time.sleep(gap)
 
     conn.close()
