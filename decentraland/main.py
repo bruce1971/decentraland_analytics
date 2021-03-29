@@ -3,7 +3,7 @@ import time
 import sys
 import pymysql
 import datetime
-gap = 3
+gap = 2
 
 
 def connect_to_db():
@@ -160,13 +160,12 @@ def import_events(conn, querystring, eth_dict, usd_dict):
     print("Successfully inserted sales => ", len(rows))
 
 
-def run():
+def lambda_handler(event, context):
     conn = connect_to_db()
     jump = 21600 #6hours
-    current = int(time.time()) #now
-    # current = 1606592354
+    current = event['start_time'] if event['start_time'] else int(time.time()) #now
     timeslots = []
-    for i in range(0, 365*4):
+    for i in range(0, 1):
         timeslots.append([current - jump*(i+1), current - jump*i])
 
     eth_dict = price_feed("ETH")
@@ -177,7 +176,7 @@ def run():
         print('Timeslot: ', timeslot)
         querystring = {
             "only_opensea": "false",
-            "offset":"0",
+            "offset": "0",
             "collection_slug": "decentraland",
             # "token_id": 33687954325172907882874086135745052934183,
             "occurred_before": timeslot[1],
@@ -189,4 +188,5 @@ def run():
     conn.close()
 
 
-run()
+event = { 'start_time': 1606592354, 'page_end': 3 }
+lambda_handler(event, {})
