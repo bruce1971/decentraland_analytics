@@ -14,7 +14,7 @@ ORDER BY  	    1 DESC
 
 -- WEEKLY
 SELECT
-          			DATE_SUB(DATE(event_timestamp), INTERVAL DAYOFWEEK(event_timestamp)-2 DAY) AS week,
+          			DATE_ADD(DATE(event_timestamp), INTERVAL - WEEKDAY(event_timestamp) DAY) AS week,
           			COUNT(1) AS sales,
           			ROUND(AVG(land_size), 2) as avg_size,
           			ROUND(AVG(price_usd_parcel)) AS avg_price_usd_parcel,
