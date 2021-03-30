@@ -5,7 +5,7 @@ import pymysql
 import datetime
 sys.path.insert(0, './common')
 from utils import connect_to_db
-gap = 0.5
+gap = 1
 
 
 def has_accessory(punk, accessory_name):
@@ -15,7 +15,7 @@ def has_accessory(punk, accessory_name):
 
 def lambda_handler(event, context):
     conn = connect_to_db()
-    for id in range(1, 10001):
+    for id in range(1953, 10001):
         print('Importing punk', id)
         url = "https://api.opensea.io/api/v1/asset/0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb/" + str(id)
         punk = requests.request("GET", url).json()
@@ -116,7 +116,7 @@ def lambda_handler(event, context):
 
         with conn.cursor() as cur:
             sql = f"""
-            INSERT INTO punks(
+            INSERT INTO punks (
                 id,
                 type,
                 attribute_count,

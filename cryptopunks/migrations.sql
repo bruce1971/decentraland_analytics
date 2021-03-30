@@ -1,14 +1,16 @@
-CREATE TABLE punk_events(
+CREATE TABLE cryptopunks_events(
   id                    VARCHAR(200) NOT NULL PRIMARY KEY,
+  cryptopunk_id         INTEGER NOT NULL,
   event_type            VARCHAR(200) NOT NULL,
   event_timestamp       VARCHAR(200) NOT NULL,
-  amount_eth            NUMERIC(5,3) NOT NULL,
+  amount_eth            NUMERIC(10,3) NOT NULL,
   amount_usd            INTEGER NOT NULL,
-  seller_address        VARCHAR(200) NOT NULL,
-  buyer_address         VARCHAR(200) NOT NULL,
+  seller_address        VARCHAR(200),
+  buyer_address         VARCHAR(200),
+  updated_timestamp     VARCHAR(200) NOT NULL
 );
 
-CREATE TABLE punks(
+CREATE TABLE cryptopunks(
   id                   INTEGER NOT NULL PRIMARY KEY,
   type                 VARCHAR(300) NOT NULL,
   attribute_count      INTEGER NOT NULL,
