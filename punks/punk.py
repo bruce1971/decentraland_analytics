@@ -5,7 +5,7 @@ import pymysql
 import datetime
 sys.path.insert(0, './common')
 from utils import connect_to_db
-gap = 1
+gap = 0.5
 
 
 def has_accessory(punk, accessory_name):
@@ -36,10 +36,10 @@ def lambda_handler(event, context):
             has_accessory(punk, "Top Hat"),
             has_accessory(punk, "Spots"),
             has_accessory(punk, "Rosy Cheeks"),
-            has_accessory(punk, "Blond Short"),
+            has_accessory(punk, "Blonde Short"),
             has_accessory(punk, "Wild White Hair"),
             has_accessory(punk, "Cowboy Hat"),
-            has_accessory(punk, "Wild Blond"),
+            has_accessory(punk, "Wild Blonde"),
             has_accessory(punk, "Straight Hair Blonde"),
             has_accessory(punk, "Big Beard"),
             has_accessory(punk, "Red Mohawk"),
@@ -89,8 +89,9 @@ def lambda_handler(event, context):
             has_accessory(punk, "Clown Eyes Blue"),
             has_accessory(punk, "Headband"),
             has_accessory(punk, "Crazy Hair"),
-            has_accessory(punk, "Knitten Cap"),
+            has_accessory(punk, "Knitted Cap"),
             has_accessory(punk, "Mohawk Dark"),
+            has_accessory(punk, "Mohawk"),
             has_accessory(punk, "Mohawk Thin"),
             has_accessory(punk, "Frumpy Hair"),
             has_accessory(punk, "Wild Hair"),
@@ -136,12 +137,12 @@ def lambda_handler(event, context):
                 has_blonde_short,
                 has_wild_white_hair,
                 has_cowboy_hat,
-                has_wild_blond,
-                has_straight_hair_blond,
+                has_wild_blonde,
+                has_straight_hair_blonde,
                 has_big_beard,
                 has_red_mohawk,
                 has_half_shaved,
-                has_blond_bob,
+                has_blonde_bob,
                 has_vampire_hair,
                 has_clown_hair_green,
                 has_straight_hair_dark,
@@ -186,8 +187,9 @@ def lambda_handler(event, context):
                 has_clown_eyes_blue,
                 has_headband,
                 has_crazy_hair,
-                has_knitten_cap,
+                has_knitted_cap,
                 has_mohawk_dark,
+                has_mohawk,
                 has_mohawk_thin,
                 has_frumpy_hair,
                 has_wild_hair,
@@ -225,10 +227,10 @@ def lambda_handler(event, context):
                 {has_accessory(punk, "Top Hat")},
                 {has_accessory(punk, "Spots")},
                 {has_accessory(punk, "Rosy Cheeks")},
-                {has_accessory(punk, "Blond Short")},
+                {has_accessory(punk, "Blonde Short")},
                 {has_accessory(punk, "Wild White Hair")},
                 {has_accessory(punk, "Cowboy Hat")},
-                {has_accessory(punk, "Wild Blond")},
+                {has_accessory(punk, "Wild Blonde")},
                 {has_accessory(punk, "Straight Hair Blonde")},
                 {has_accessory(punk, "Big Beard")},
                 {has_accessory(punk, "Red Mohawk")},
@@ -278,8 +280,9 @@ def lambda_handler(event, context):
                 {has_accessory(punk, "Clown Eyes Blue")},
                 {has_accessory(punk, "Headband")},
                 {has_accessory(punk, "Crazy Hair")},
-                {has_accessory(punk, "Knitten Cap")},
+                {has_accessory(punk, "Knitted Cap")},
                 {has_accessory(punk, "Mohawk Dark")},
+                {has_accessory(punk, "Mohawk")},
                 {has_accessory(punk, "Mohawk Thin")},
                 {has_accessory(punk, "Frumpy Hair")},
                 {has_accessory(punk, "Wild Hair")},
@@ -299,7 +302,6 @@ def lambda_handler(event, context):
                 {has_accessory(punk, "Hot Lipstick")},
                 {has_accessory(punk, "Cigarette")},
                 {has_accessory(punk, "Earring")}
-
             )
             ON DUPLICATE KEY UPDATE
                 id=id

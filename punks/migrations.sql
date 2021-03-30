@@ -1,10 +1,11 @@
 CREATE TABLE punk_events(
-  event_timestamp       VARCHAR(200) NOT NULL
-  ,price_eth            NUMERIC(5,3) NOT NULL
-  ,price_usd            INTEGER NOT NULL
-  ,external_url         VARCHAR(300) NOT NULL
-  ,opensea_url          VARCHAR(300) NOT NULL
-  ,event_id             VARCHAR(200) NOT NULL PRIMARY KEY
+  id                    VARCHAR(200) NOT NULL PRIMARY KEY,
+  event_type            VARCHAR(200) NOT NULL,
+  event_timestamp       VARCHAR(200) NOT NULL,
+  amount_eth            NUMERIC(5,3) NOT NULL,
+  amount_usd            INTEGER NOT NULL,
+  seller_address        VARCHAR(200) NOT NULL,
+  buyer_address         VARCHAR(200) NOT NULL,
 );
 
 CREATE TABLE punks(
@@ -28,12 +29,12 @@ CREATE TABLE punks(
   has_blonde_short BOOLEAN NOT NULL DEFAULT FALSE,
   has_wild_white_hair BOOLEAN NOT NULL DEFAULT FALSE,
   has_cowboy_hat BOOLEAN NOT NULL DEFAULT FALSE,
-  has_wild_blond BOOLEAN NOT NULL DEFAULT FALSE,
-  has_straight_hair_blond BOOLEAN NOT NULL DEFAULT FALSE,
+  has_wild_blonde BOOLEAN NOT NULL DEFAULT FALSE,
+  has_straight_hair_blonde BOOLEAN NOT NULL DEFAULT FALSE,
   has_big_beard BOOLEAN NOT NULL DEFAULT FALSE,
   has_red_mohawk BOOLEAN NOT NULL DEFAULT FALSE,
   has_half_shaved BOOLEAN NOT NULL DEFAULT FALSE,
-  has_blond_bob BOOLEAN NOT NULL DEFAULT FALSE,
+  has_blonde_bob BOOLEAN NOT NULL DEFAULT FALSE,
   has_vampire_hair BOOLEAN NOT NULL DEFAULT FALSE,
   has_clown_hair_green BOOLEAN NOT NULL DEFAULT FALSE,
   has_straight_hair_dark BOOLEAN NOT NULL DEFAULT FALSE,
@@ -78,8 +79,9 @@ CREATE TABLE punks(
   has_clown_eyes_blue BOOLEAN NOT NULL DEFAULT FALSE,
   has_headband BOOLEAN NOT NULL DEFAULT FALSE,
   has_crazy_hair BOOLEAN NOT NULL DEFAULT FALSE,
-  has_knitten_cap BOOLEAN NOT NULL DEFAULT FALSE,
+  has_knitted_cap BOOLEAN NOT NULL DEFAULT FALSE,
   has_mohawk_dark BOOLEAN NOT NULL DEFAULT FALSE,
+  has_mohawk BOOLEAN NOT NULL DEFAULT FALSE,
   has_mohawk_thin BOOLEAN NOT NULL DEFAULT FALSE,
   has_frumpy_hair BOOLEAN NOT NULL DEFAULT FALSE,
   has_wild_hair BOOLEAN NOT NULL DEFAULT FALSE,
