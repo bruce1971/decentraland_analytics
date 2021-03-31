@@ -15,7 +15,7 @@ def has_accessory(punk, accessory_name):
 
 def lambda_handler(event, context):
     conn = connect_to_db()
-    for id in range(1953, 10001):
+    for id in range(0, 10000):
         print('Importing punk', id)
         url = "https://api.opensea.io/api/v1/asset/0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb/" + str(id)
         punk = requests.request("GET", url).json()
