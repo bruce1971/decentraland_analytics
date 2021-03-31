@@ -16,21 +16,30 @@ def import_events(conn, querystring, eth_usd_dict):
     with conn.cursor() as cur:
         now_timestamp = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         for event in events["asset_events"]:
-            if event["event_type"] == 'created':
+            if event["event_type"] in ['cancelled']:
+                continue
+            elif event["event_type"] == 'created':
                 amount_eth = float(event["starting_price"])/1e18
                 amount_usd = amount_eth * eth_usd_dict[event["created_date"][:10]]
                 seller_address = event["asset"]["owner"]["address"]
                 buyer_address = None
-            # elif event["event_type"] == 'successful':
-            #     amount_eth = float(event["starting_price"])/1e18
-            #     amount_usd = amount_eth * eth_usd_dict[event["created_date"][:10]]
-            #     seller_address = event["asset"]["owner"]["address"]
-            #     buyer_address = None
+            elif event["event_type"] == 'successful':
+                amount_eth = float(event["total_price"])/1e18
+                amount_usd = amount_eth * eth_usd_dict[event["created_date"][:10]]
+                seller_address = event["seller"]["address"]
+                buyer_address = event["winner_account"]["address"]
+            elif event["event_type"] in ['bid_entered', 'bid_withdrawn']:
+                amount_eth = float(event["bid_amount"])/1e18
+                amount_usd = amount_eth * eth_usd_dict[event["created_date"][:10]]
+                seller_address = event["asset"]["owner"]["address"]
+                buyer_address = event["transaction"]["from_account"]["address"]
+            elif event["event_type"] == 'transfer':
+                amount_eth = None
+                amount_usd = None
+                seller_address = event["transaction"]["to_account"]["address"]
+                buyer_address = event["transaction"]["from_account"]["address"]
             else:
-                amount_eth = 999
-                amount_usd = 888
-                seller_address = None
-                buyer_address = None
+                print('ERROR!')
 
             sql = f"""
             INSERT INTO cryptopunks_events(
@@ -48,8 +57,8 @@ def import_events(conn, querystring, eth_usd_dict):
                 {int(event["asset"]["token_id"])},
                 "{event["event_type"]}",
                 "{event["created_date"]}",
-                {amount_eth},
-                {int(amount_usd)},
+                {amount_eth if amount_eth is not None else 'NULL'},
+                {int(amount_usd) if amount_usd is not None else 'NULL'},
                 {f"'{seller_address}'" if seller_address is not None else 'NULL'},
                 {f"'{buyer_address}'" if buyer_address is not None else 'NULL'},
                 "{now_timestamp}"
@@ -57,7 +66,6 @@ def import_events(conn, querystring, eth_usd_dict):
             ON DUPLICATE KEY UPDATE
                 id=id
             """
-            print(sql)
             cur.execute(sql)
             print('Inserting event', event["id"])
     conn.commit()
@@ -80,7 +88,7 @@ def lambda_handler(event, context):
             "only_opensea": "false",
             "offset": "0",
             "collection_slug": "cryptopunks",
-            "event_type": "successful",
+            # "event_type": "transfer",
             "occurred_before": timeslot[1],
             "occurred_after": timeslot[0]
         }

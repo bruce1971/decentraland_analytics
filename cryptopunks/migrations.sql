@@ -3,8 +3,8 @@ CREATE TABLE cryptopunks_events(
   cryptopunk_id         INTEGER NOT NULL,
   event_type            VARCHAR(200) NOT NULL,
   event_timestamp       VARCHAR(200) NOT NULL,
-  amount_eth            NUMERIC(10,3) NOT NULL,
-  amount_usd            INTEGER NOT NULL,
+  amount_eth            NUMERIC(10,3),
+  amount_usd            INTEGER,
   seller_address        VARCHAR(200),
   buyer_address         VARCHAR(200),
   updated_timestamp     VARCHAR(200) NOT NULL
