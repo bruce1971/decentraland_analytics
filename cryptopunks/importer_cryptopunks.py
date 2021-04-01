@@ -64,7 +64,9 @@ def import_events(conn, querystring, eth_usd_dict):
                 "{now_timestamp}"
             )
             ON DUPLICATE KEY UPDATE
-                id=id
+                id = id,
+                amount_eth = {amount_eth if amount_eth is not None else 'NULL'},
+                amount_usd = {int(amount_usd) if amount_usd is not None else 'NULL'}
             """
             cur.execute(sql)
             print('Inserting event', event["id"])
@@ -73,7 +75,7 @@ def import_events(conn, querystring, eth_usd_dict):
 
 def lambda_handler(event, context):
     conn = connect_to_db()
-    jump = 21600 #6hours
+    jump = 3600 #1hours
     current = event['start_time'] if 'start_time' in event else int(time.time()) #now
     timeslots = []
     for i in range(0, 4*365):
@@ -87,8 +89,10 @@ def lambda_handler(event, context):
         querystring = {
             "only_opensea": "false",
             "offset": "0",
+            "limit": "10000",
             "collection_slug": "cryptopunks",
             # "event_type": "transfer",
+            # "token_id": 6674,
             "occurred_before": timeslot[1],
             "occurred_after": timeslot[0]
         }
