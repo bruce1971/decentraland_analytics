@@ -10,7 +10,7 @@ CREATE TABLE cryptopunks_events(
   updated_timestamp     VARCHAR(200) NOT NULL
 );
 
-CREATE TABLE cryptopunks(
+CREATE TABLE cryptopunks_assets(
   id                   INTEGER NOT NULL PRIMARY KEY,
   type                 VARCHAR(300) NOT NULL,
   attribute_count      INTEGER NOT NULL,

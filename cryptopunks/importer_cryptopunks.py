@@ -19,25 +19,27 @@ def import_events(conn, querystring, eth_usd_dict):
             if event["event_type"] in ['cancelled']:
                 continue
             elif event["event_type"] == 'created':
+                if event["starting_price"] is None:
+                    continue
                 amount_eth = float(event["starting_price"])/1e18
                 amount_usd = amount_eth * eth_usd_dict[event["created_date"][:10]]
-                seller_address = event["asset"]["owner"]["address"]
+                seller_address = event["asset"]["owner"]["address"] if event["asset"]["owner"] is not None else None
                 buyer_address = None
             elif event["event_type"] == 'successful':
                 amount_eth = float(event["total_price"])/1e18
                 amount_usd = amount_eth * eth_usd_dict[event["created_date"][:10]]
                 seller_address = event["seller"]["address"] if event["seller"] is not None else None
-                buyer_address = event["winner_account"]["address"]
+                buyer_address = event["winner_account"]["address"] if event["winner_account"] is not None else None
             elif event["event_type"] in ['bid_entered', 'bid_withdrawn']:
                 amount_eth = float(event["bid_amount"])/1e18
                 amount_usd = amount_eth * eth_usd_dict[event["created_date"][:10]]
-                seller_address = event["asset"]["owner"]["address"]
-                buyer_address = event["transaction"]["from_account"]["address"]
+                seller_address = event["asset"]["owner"]["address"] if event["asset"]["owner"] is not None else None
+                buyer_address = event["transaction"]["from_account"]["address"] if event["transaction"] is not None else None
             elif event["event_type"] == 'transfer':
                 amount_eth = None
                 amount_usd = None
-                seller_address = event["transaction"]["to_account"]["address"]
-                buyer_address = event["transaction"]["from_account"]["address"]
+                seller_address = event["transaction"]["to_account"]["address"] if event["transaction"] is not None else None
+                buyer_address = event["transaction"]["from_account"]["address"] if event["transaction"] is not None else None
             else:
                 print('ERROR!')
 
@@ -56,7 +58,7 @@ def import_events(conn, querystring, eth_usd_dict):
                 "{event["id"]}",
                 {int(event["asset"]["token_id"])},
                 "{event["event_type"]}",
-                "{event["created_date"]}",
+                "{event["transaction"]["timestamp"]}",
                 {amount_eth if amount_eth is not None else 'NULL'},
                 {int(amount_usd) if amount_usd is not None else 'NULL'},
                 {f"'{seller_address}'" if seller_address is not None else 'NULL'},
@@ -65,6 +67,7 @@ def import_events(conn, querystring, eth_usd_dict):
             )
             ON DUPLICATE KEY UPDATE
                 id = id,
+                event_timestamp = "{event["transaction"]["timestamp"]}",
                 amount_eth = {amount_eth if amount_eth is not None else 'NULL'},
                 amount_usd = {int(amount_usd) if amount_usd is not None else 'NULL'}
             """
@@ -75,10 +78,10 @@ def import_events(conn, querystring, eth_usd_dict):
 
 def lambda_handler(event, context):
     conn = connect_to_db()
-    jump = 3*3600 #1hours
+    jump = 5*3600 #1hours
     current = event['start_time'] if 'start_time' in event else int(time.time()) #now
     timeslots = []
-    for i in range(0, 4*9365):
+    for i in range(0, 100000):
         timeslots.append([current - jump*(i+1), current - jump*i])
 
     eth_usd_dict = price_feed("1027", "USD") # eth -> usd
@@ -102,6 +105,6 @@ def lambda_handler(event, context):
     conn.close()
 
 
-event = { 'start_time': 1589623986 }
+event = { 'start_time': 1516820725 }
 # event = {}
 lambda_handler(event, {})
