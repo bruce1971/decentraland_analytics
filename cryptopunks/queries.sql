@@ -34,25 +34,6 @@ GROUP BY 	      1
 ORDER BY  	    1 DESC
 
 
--- MEDIAN DAILY
-select
-    event_timestamp as day,
-    ROUND(avg(amount_eth),2) as median_eth,
-    ROUND(LOG(avg(amount_eth)),2) as log_median_eth
-from (
-select
-    DATE(event_timestamp) as event_timestamp,
-    amount_eth,
-    row_number() over(partition by DATE(event_timestamp) order by amount_eth) rn,
-    count(*) over(partition by DATE(event_timestamp)) cnt
-  from cryptopunks_events
-  where event_type = 'successful'
-) as dd
-where rn in ( FLOOR((cnt + 1) / 2), FLOOR( (cnt + 2) / 2) )
-group by event_timestamp
-ORDER BY 1 DESC
-
-
 -- MEDIAN WEEKLY
 select
     event_timestamp as week,
@@ -62,30 +43,12 @@ from (
 select
     DATE_ADD(DATE(event_timestamp), INTERVAL - WEEKDAY(event_timestamp) DAY) as event_timestamp,
     amount_eth,
-    row_number() over(partition by DATE(event_timestamp) order by amount_eth) rn,
-    count(*) over(partition by DATE(event_timestamp)) cnt
+    row_number() over(partition by DATE_ADD(DATE(event_timestamp), INTERVAL - WEEKDAY(event_timestamp) DAY) order by amount_eth) rn,
+    count(*) over(partition by DATE_ADD(DATE(event_timestamp), INTERVAL - WEEKDAY(event_timestamp) DAY)) cnt
   from cryptopunks_events
-  where event_type = 'successful'
-) as dd
-where rn in ( FLOOR((cnt + 1) / 2), FLOOR( (cnt + 2) / 2) )
-group by event_timestamp
-ORDER BY 1 DESC
-
-
-
--- MEDIAN MONTHLY
-select
-    event_timestamp as month,
-    ROUND(avg(amount_eth),2) as median_eth,
-    ROUND(LOG(avg(amount_eth)),2) as log_median_eth
-from (
-select
-    DATE_SUB(DATE(event_timestamp), INTERVAL DAY(event_timestamp)-1 DAY) as event_timestamp,
-    amount_eth,
-    row_number() over(partition by DATE(event_timestamp) order by amount_eth) rn,
-    count(*) over(partition by DATE(event_timestamp)) cnt
-  from cryptopunks_events
-  where event_type = 'successful'
+  where 1=1
+  	AND event_type = 'successful'
+  	AND amount_eth > 0
 ) as dd
 where rn in ( FLOOR((cnt + 1) / 2), FLOOR( (cnt + 2) / 2) )
 group by event_timestamp
