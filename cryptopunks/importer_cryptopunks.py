@@ -5,7 +5,7 @@ import pymysql
 import datetime
 sys.path.insert(0, './common')
 from utils import connect_to_db, price_feed
-gap = 3
+gap = 2.5
 
 
 def import_events(conn, querystring, eth_usd_dict):
@@ -26,7 +26,7 @@ def import_events(conn, querystring, eth_usd_dict):
             elif event["event_type"] == 'successful':
                 amount_eth = float(event["total_price"])/1e18
                 amount_usd = amount_eth * eth_usd_dict[event["created_date"][:10]]
-                seller_address = event["seller"]["address"]
+                seller_address = event["seller"]["address"] if event["seller"] is not None else None
                 buyer_address = event["winner_account"]["address"]
             elif event["event_type"] in ['bid_entered', 'bid_withdrawn']:
                 amount_eth = float(event["bid_amount"])/1e18
@@ -75,10 +75,10 @@ def import_events(conn, querystring, eth_usd_dict):
 
 def lambda_handler(event, context):
     conn = connect_to_db()
-    jump = 3600 #1hours
+    jump = 3*3600 #1hours
     current = event['start_time'] if 'start_time' in event else int(time.time()) #now
     timeslots = []
-    for i in range(0, 4*365):
+    for i in range(0, 4*9365):
         timeslots.append([current - jump*(i+1), current - jump*i])
 
     eth_usd_dict = price_feed("1027", "USD") # eth -> usd
@@ -102,6 +102,6 @@ def lambda_handler(event, context):
     conn.close()
 
 
-# event = { 'start_time': 1606592354 }
-event = {}
+event = { 'start_time': 1589623986 }
+# event = {}
 lambda_handler(event, {})
