@@ -78,7 +78,7 @@ def import_events(conn, querystring, eth_usd_dict):
 
 def lambda_handler(event, context):
     conn = connect_to_db()
-    jump = 5*3600 #1hours
+    jump = 1*3600 #1hours
     current = event['start_time'] if 'start_time' in event else int(time.time()) #now
     timeslots = []
     for i in range(0, 100000):
@@ -105,6 +105,6 @@ def lambda_handler(event, context):
     conn.close()
 
 
-event = { 'start_time': 1516820725 }
+event = { 'start_time': 1498662325 }
 # event = {}
 lambda_handler(event, {})
