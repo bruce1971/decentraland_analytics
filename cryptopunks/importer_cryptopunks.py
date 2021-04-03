@@ -5,11 +5,10 @@ import pymysql
 import datetime
 sys.path.insert(0, './common')
 from utils import connect_to_db, price_feed
-gap = 2.5
+gap = 1.8
 
 
 def import_events(conn, querystring, eth_usd_dict):
-
     url = "https://api.opensea.io/api/v1/events"
     events = requests.request("GET", url, params=querystring).json()
 
@@ -66,10 +65,10 @@ def import_events(conn, querystring, eth_usd_dict):
                 "{now_timestamp}"
             )
             ON DUPLICATE KEY UPDATE
-                id = id,
                 event_timestamp = "{event["transaction"]["timestamp"]}",
                 amount_eth = {amount_eth if amount_eth is not None else 'NULL'},
-                amount_usd = {int(amount_usd) if amount_usd is not None else 'NULL'}
+                amount_usd = {int(amount_usd) if amount_usd is not None else 'NULL'},
+                updated_timestamp = "{now_timestamp}"
             """
             cur.execute(sql)
             print('Inserting event', event["id"])
@@ -79,10 +78,11 @@ def import_events(conn, querystring, eth_usd_dict):
 def lambda_handler(event, context):
     conn = connect_to_db()
     jump = 1*3600 #1hours
-    current = event['start_time'] if 'start_time' in event else int(time.time()) #now
+    start_time = event['start_time'] if 'start_time' in event else int(time.time()) #now
+    slots = event['slots'] if 'slots' in event else 30 #now
     timeslots = []
-    for i in range(0, 100000):
-        timeslots.append([current - jump*(i+1), current - jump*i])
+    for i in range(0, slots):
+        timeslots.append([start_time - jump*(i+1), start_time - jump*i])
 
     eth_usd_dict = price_feed("1027", "USD") # eth -> usd
 
@@ -94,8 +94,6 @@ def lambda_handler(event, context):
             "offset": "0",
             "limit": "10000",
             "collection_slug": "cryptopunks",
-            # "event_type": "transfer",
-            # "token_id": 6674,
             "occurred_before": timeslot[1],
             "occurred_after": timeslot[0]
         }
@@ -105,6 +103,7 @@ def lambda_handler(event, context):
     conn.close()
 
 
-event = { 'start_time': 1498662325 }
-# event = {}
+# event = { 'start_time': 1498662325, 'slots': 300 }
+# lambda_handler(event, {})
+event = { 'slots': 300 }
 lambda_handler(event, {})
