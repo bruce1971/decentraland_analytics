@@ -5,7 +5,7 @@ import pymysql
 import datetime
 sys.path.insert(0, './common')
 from utils import connect_to_db
-gap = 3
+gap = 3.5
 
 
 def price_feed(type):
@@ -149,7 +149,7 @@ def import_events(conn, querystring, mana_eth_dict, mana_usd_dict):
 
 def lambda_handler(event, context):
     conn = connect_to_db()
-    jump = 21600 #6hours
+    jump = 6*3600 #6hours
     start_time = event['start_time'] if 'start_time' in event else int(time.time()) #now
     slots = event['slots'] if 'slots' in event else 1 #now
     timeslots = []
@@ -175,6 +175,5 @@ def lambda_handler(event, context):
     conn.close()
 
 
-# event = { 'gap': 2, 'start_time': 1606592354, 'slots': 4 }
-event = { 'gap': 2, 'start_time': 1615500173, 'slots': 300 }
+event = { 'start_time': 1604524481, 'slots': 300 }
 lambda_handler(event, {})

@@ -1,3 +1,45 @@
+-- DAILY BETTER
+SELECT
+            			DATE(event_timestamp) AS day,
+            			COUNT(1) AS sales,
+            			ROUND(MIN(price_eth_parcel), 2) AS min_eth_parcel,
+            			ROUND(AVG(price_eth_parcel), 2) AS avg_eth_parcel,
+            			ROUND(MAX(price_eth_parcel), 2) AS max_eth_parcel,
+            			ROUND(LOG(avg(price_eth_parcel)),2) as log_median_eth_parcel
+FROM 		          land_events
+WHERE           	price_usd_parcel > 50 AND event_type = 'successful'
+GROUP BY 	      	1
+ORDER BY  	    	1 DESC
+
+
+-- WEEKLY BETTER
+SELECT
+            			DATE_ADD(DATE(event_timestamp), INTERVAL - WEEKDAY(event_timestamp) DAY) AS week,
+            			COUNT(1) AS sales,
+            			ROUND(MIN(price_eth_parcel), 2) AS min_eth_parcel,
+            			ROUND(AVG(price_eth_parcel), 2) AS avg_eth_parcel,
+            			ROUND(MAX(price_eth_parcel), 2) AS max_eth_parcel,
+            			ROUND(LOG(avg(price_eth_parcel)),2) as log_median_eth_parcel
+FROM 		          land_events
+WHERE           	price_usd_parcel > 50 AND event_type = 'successful'
+GROUP BY 	      	1
+ORDER BY  	    	1 DESC
+
+
+-- MONTHLY BETTER
+SELECT
+            			DATE_SUB(DATE(event_timestamp), INTERVAL DAY(event_timestamp)-1 DAY) AS month,
+            			COUNT(1) AS sales,
+            			ROUND(MIN(price_eth_parcel), 2) AS min_eth_parcel,
+            			ROUND(AVG(price_eth_parcel), 2) AS avg_eth_parcel,
+            			ROUND(MAX(price_eth_parcel), 2) AS max_eth_parcel,
+            			ROUND(LOG(avg(price_eth_parcel)),2) as log_median_eth_parcel
+FROM 		          land_events
+WHERE           	price_usd_parcel > 50 AND event_type = 'successful'
+GROUP BY 	      	1
+ORDER BY  	    	1 DESC
+
+
 -- DAILY
 SELECT
           			DATE(event_timestamp) AS day,

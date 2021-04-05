@@ -1,37 +1,136 @@
 -- DAILY
+WITH
+median as (
+	select
+	    event_timestamp as day,
+	    ROUND(avg(amount_eth),2) as median_eth,
+	    ROUND(LOG(avg(amount_eth)),2) as log_median_eth
+	from (
+	select
+	    DATE(event_timestamp) as event_timestamp,
+	    amount_eth,
+	    row_number() over(partition by DATE(event_timestamp) order by amount_eth) rn,
+	    count(*) over(partition by DATE(event_timestamp)) cnt
+	  from cryptopunks_events
+	  where 1=1
+	  	AND event_type = 'successful'
+	  	AND amount_eth > 0
+	) as dd
+	where rn in ( FLOOR((cnt + 1) / 2), FLOOR( (cnt + 2) / 2) )
+	group by event_timestamp
+	ORDER BY 1 DESC
+),
+basic AS (
+	SELECT
+	          			DATE(event_timestamp) AS day,
+	          			COUNT(1) AS sales,
+	          			ROUND(MAX(amount_eth), 2) AS max_eth,
+	          			ROUND(MIN(amount_eth), 2) AS min_eth
+	FROM 		        cryptopunks_events
+	WHERE           amount_eth > 0 and event_type = 'successful'
+	GROUP BY 	      1
+	ORDER BY  	    1 DESC
+)
 SELECT
-          			DATE(event_timestamp) AS day,
-          			COUNT(1) AS sales,
-          			ROUND(AVG(amount_eth), 2) AS avg_price_eth,
-          			ROUND(MIN(amount_eth), 2) AS min_price_eth
-FROM 		        cryptopunks_events
-WHERE           amount_eth > 0 and event_type = 'successful'
-GROUP BY 	      1
-ORDER BY  	    1 DESC
+	b.day,
+	b.sales,
+	b.min_eth,
+	m.median_eth,
+	b.max_eth,
+	m.log_median_eth
+FROM basic b
+JOIN median m on m.day = b.day
+
 
 
 -- WEEKLY
-SELECT
+WITH
+median as (
+	select
+	    event_timestamp as week,
+	    ROUND(avg(amount_eth),2) as median_eth,
+	    ROUND(LOG(avg(amount_eth)),2) as log_median_eth
+	from (
+	select
+	    DATE_ADD(DATE(event_timestamp), INTERVAL - WEEKDAY(event_timestamp) DAY) AS event_timestamp,
+	    amount_eth,
+	    row_number() over(partition by DATE_ADD(DATE(event_timestamp), INTERVAL - WEEKDAY(event_timestamp) DAY) order by amount_eth) rn,
+	    count(*) over(partition by DATE_ADD(DATE(event_timestamp), INTERVAL - WEEKDAY(event_timestamp) DAY)) cnt
+	  from cryptopunks_events
+	  where 1=1
+	  	AND event_type = 'successful'
+	  	AND amount_eth > 0
+	) as dd
+	where rn in ( FLOOR((cnt + 1) / 2), FLOOR( (cnt + 2) / 2) )
+	group by event_timestamp
+	ORDER BY 1 DESC
+),
+basic AS (
+	SELECT
           			DATE_ADD(DATE(event_timestamp), INTERVAL - WEEKDAY(event_timestamp) DAY) AS week,
           			COUNT(1) AS sales,
-          			ROUND(AVG(amount_eth), 2) AS avg_price_eth,
-          			ROUND(MIN(amount_eth), 2) AS min_price_eth
-FROM 		        cryptopunks_events
-WHERE           amount_eth > 0 and event_type = 'successful'
-GROUP BY 	      1
-ORDER BY  	    1 DESC
+          			ROUND(MAX(amount_eth), 2) AS max_eth,
+          			ROUND(MIN(amount_eth), 2) AS min_eth
+	FROM 		    cryptopunks_events
+	WHERE           amount_eth > 0 and event_type = 'successful'
+	GROUP BY 	    1
+	ORDER BY  	    1 DESC
+)
+SELECT
+	b.week,
+	b.sales,
+	b.min_eth,
+	m.median_eth,
+	b.max_eth,
+	m.log_median_eth
+FROM basic b
+JOIN median m on m.week = b.week
+
 
 
 -- MONTHLY
+WITH
+median as (
+	select
+	    event_timestamp as month,
+	    ROUND(avg(amount_eth),2) as median_eth,
+	    ROUND(LOG(avg(amount_eth)),2) as log_median_eth
+	from (
+	select
+	    DATE_SUB(DATE(event_timestamp), INTERVAL DAY(event_timestamp)-1 DAY) as event_timestamp,
+	    amount_eth,
+	    row_number() over(partition by DATE_SUB(DATE(event_timestamp), INTERVAL DAY(event_timestamp)-1 DAY) order by amount_eth) rn,
+	    count(*) over(partition by DATE_SUB(DATE(event_timestamp), INTERVAL DAY(event_timestamp)-1 DAY)) cnt
+	  from cryptopunks_events
+	  where 1=1
+	  	AND event_type = 'successful'
+	  	AND amount_eth > 0
+	) as dd
+	where rn in ( FLOOR((cnt + 1) / 2), FLOOR( (cnt + 2) / 2) )
+	group by event_timestamp
+	ORDER BY 1 DESC
+),
+basic AS (
+	SELECT
+	          			DATE_SUB(DATE(event_timestamp), INTERVAL DAY(event_timestamp)-1 DAY) AS month,
+	          			COUNT(1) AS sales,
+	          			ROUND(MAX(amount_eth), 2) AS max_eth,
+	          			ROUND(MIN(amount_eth), 2) AS min_eth
+	FROM 		        cryptopunks_events
+	WHERE           amount_eth > 0 and event_type = 'successful'
+	GROUP BY 	      1
+	ORDER BY  	    1 DESC
+)
 SELECT
-          			DATE_SUB(DATE(event_timestamp), INTERVAL DAY(event_timestamp)-1 DAY) AS month,
-          			COUNT(1) AS sales,
-          			ROUND(AVG(amount_eth), 2) AS avg_price_eth,
-          			ROUND(MIN(amount_eth), 2) AS min_price_eth
-FROM 		        cryptopunks_events
-WHERE           amount_eth > 0 and event_type = 'successful'
-GROUP BY 	      1
-ORDER BY  	    1 DESC
+	b.month,
+	b.sales,
+	b.min_eth,
+	m.median_eth,
+	b.max_eth,
+	m.log_median_eth
+FROM basic b
+JOIN median m on m.month = b.month
+
 
 
 
