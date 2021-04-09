@@ -5,7 +5,7 @@ import pymysql
 import datetime
 sys.path.insert(0, './common')
 from utils import connect_to_db
-gap = 3.5
+gap = 4
 
 
 def price_feed(type):
@@ -175,5 +175,5 @@ def lambda_handler(event, context):
     conn.close()
 
 
-event = { 'start_time': 1604524481, 'slots': 300 }
+event = { 'start_time': 1591175681, 'slots': 300 }
 lambda_handler(event, {})
