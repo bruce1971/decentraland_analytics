@@ -7,6 +7,16 @@ CREATE TABLE sb_assets(
   opensea_url          VARCHAR(300) NOT NULL
 );
 
+CREATE TABLE sb_assets2 (
+  id                   INTEGER PRIMARY KEY AUTO_INCREMENT,
+  asset_id             INTEGER NOT NULL,
+  token_id             VARCHAR(100) NOT NULL,
+  x                    INTEGER NOT NULL,
+  y                    INTEGER NOT NULL,
+  external_url         VARCHAR(300) NOT NULL,
+  opensea_url          VARCHAR(300) NOT NULL
+);
+
 CREATE TABLE sb_events(
   id                    VARCHAR(200) NOT NULL PRIMARY KEY,
   asset_id              INTEGER NOT NULL,

@@ -2,7 +2,7 @@
 
 #Zipping
 echo Start zipping...
-cd $1
+cd sb
 zip -g ../common/zip/lambda_importer_$1.zip importer_$1.py
 cd ../
 cd common

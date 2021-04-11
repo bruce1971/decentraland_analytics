@@ -18,8 +18,9 @@ def lambda_handler(event, context):
         rangeslots.append([start + jump*i, start + jump*(i+1) - 1])
     for rangeslot in rangeslots:
         print('rangeslot:', rangeslot)
-        url = f"https://api.opensea.io/api/v1/assets?asset_contract_address=0x50f5474724e0ee42d9a4e711ccfb275809fd6d4a&collection=sandbox&order_direction=asc&offset={rangeslot[0]}&limit={rangeslot[1]}"
-        print(requests.request("GET", url).json())
+        url = f"https://api.opensea.io/api/v1/assets?asset_contract_address=0x50f5474724e0ee42d9a4e711ccfb275809fd6d4a&collection=sandbox&order_direction=desc&offset={rangeslot[0]}&limit=50"
+        print(url)
+        # print(requests.request("GET", url).json())
         lands = requests.request("GET", url).json()['assets']
         for land in lands:
             with conn.cursor() as cur:
@@ -48,4 +49,4 @@ def lambda_handler(event, context):
     conn.close()
 
 
-lambda_handler({'start': 10000, 'slots': 10000}, {})
+lambda_handler({'start': 0, 'slots': 10000}, {})

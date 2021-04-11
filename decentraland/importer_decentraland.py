@@ -151,7 +151,7 @@ def lambda_handler(event, context):
     conn = connect_to_db()
     jump = 6*3600 #6hours
     start_time = event['start_time'] if 'start_time' in event else int(time.time()) #now
-    slots = event['slots'] if 'slots' in event else 1 #now
+    slots = event['slots'] if 'slots' in event else 5 #now
     timeslots = []
     for i in range(0, slots):
         timeslots.append([start_time - jump*(i+1), start_time - jump*i])
@@ -175,5 +175,5 @@ def lambda_handler(event, context):
     conn.close()
 
 
-event = { 'start_time': 1591175681, 'slots': 300 }
-lambda_handler(event, {})
+# event = { 'start_time': 1591175681, 'slots': 300 }
+# lambda_handler({}, {})
