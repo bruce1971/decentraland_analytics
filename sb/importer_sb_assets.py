@@ -10,19 +10,15 @@ gap = 1
 
 def lambda_handler(event, context):
     conn = connect_to_db()
-    jump = 20
-    start = event['start'] if 'start' in event else 0
-    slots = event['slots'] if 'slots' in event else 5
-    rangeslots = []
-    for i in range(0, slots):
-        rangeslots.append([start + jump*i, start + jump*(i+1) - 1])
-    for rangeslot in rangeslots:
-        print('rangeslot:', rangeslot)
-        url = f"https://api.opensea.io/api/v1/assets?asset_contract_address=0x50f5474724e0ee42d9a4e711ccfb275809fd6d4a&collection=sandbox&order_direction=desc&offset={rangeslot[0]}&limit=50"
+    order_by = 'token_id'
+    order_direction = 'desc'
+    for offset in range(0, 10001, 50):
+        print('offset:', offset)
+        url = f"https://api.opensea.io/api/v1/assets?asset_contract_address=0x50f5474724e0ee42d9a4e711ccfb275809fd6d4a&collection=sandbox&order_by={order_by}&order_direction={order_direction}&offset={offset}&limit=50"
         print(url)
-        # print(requests.request("GET", url).json())
         lands = requests.request("GET", url).json()['assets']
         for land in lands:
+            print(land['token_id'])
             with conn.cursor() as cur:
                 sql = f"""
                 INSERT INTO sb_assets (
@@ -49,4 +45,4 @@ def lambda_handler(event, context):
     conn.close()
 
 
-lambda_handler({'start': 0, 'slots': 10000}, {})
+lambda_handler({}, {})

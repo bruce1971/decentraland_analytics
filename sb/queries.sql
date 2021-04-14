@@ -38,3 +38,12 @@ FROM 		        sb_events
 WHERE           event_type = 'successful'
 GROUP BY 	      1
 ORDER BY  	    1 DESC
+
+
+-- find token_id
+SELECT
+			      floor((cast(token_id as signed) + 99) / 1000) * 1000,
+			      COUNT(1)
+from 		    sb_assets
+GROUP by 	  floor((cast(token_id as signed) + 99) / 1000) * 1000
+ORDER BY 	  1 ASC
